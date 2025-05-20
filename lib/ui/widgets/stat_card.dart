@@ -1,3 +1,5 @@
+// lib/ui/widgets/stat_card.dart
+
 import 'package:flutter/material.dart';
 
 class StatCard extends StatelessWidget {
@@ -12,9 +14,11 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SizedBox(
       width: 140,
       child: Card(
+        color: theme.cardColor,
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -26,12 +30,12 @@ class StatCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodySmall,
+                style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 8),
               Text(
                 value,
-                style: Theme.of(context).textTheme.titleLarge,
+                style: theme.textTheme.titleLarge,
               ),
             ],
           ),
