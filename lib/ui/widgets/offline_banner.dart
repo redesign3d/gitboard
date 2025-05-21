@@ -11,7 +11,7 @@ class OfflineBanner extends StatelessWidget {
       color: const Color(0xFF050A1C),
       child: const Center(
         child: Text(
-          'Dashboard is currently offline. Showing stale data.',
+          'Dashboard is currently offline. Showing stale data where available.',
           style: TextStyle(
             color: Color(0xFF677FA2),
           ),

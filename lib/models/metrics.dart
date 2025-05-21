@@ -9,7 +9,7 @@ class Metrics {
 
   final int prOpened;
   final int prMerged;
-  final int branchCount;    // was forkCount
+  final int branchCount;
   final int starCount;
   final LatestCommit latestCommit;
 

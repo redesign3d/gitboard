@@ -13,7 +13,7 @@ class EventsRepository {
     required this.repo,
   });
 
-  /// Fetches the most recent events for the repo.
+  /// Fetches the most recent events for the repo
   Future<List<GitHubEvent>> fetchEvents() async {
     final url = Uri.parse('https://api.github.com/repos/$owner/$repo/events');
     final res = await http.get(url, headers: {

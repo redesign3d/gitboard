@@ -1,3 +1,5 @@
+// lib/ui/widgets/language_breakdown.dart
+
 import 'package:flutter/material.dart';
 import '../../models/language_stat.dart';
 
@@ -27,6 +29,7 @@ class LanguageBreakdown extends StatelessWidget {
         children: [
           Text('Language Breakdown (total)', style: titleStyle),
           const SizedBox(height: 8),
+          // Center the bar & legend vertically
           Expanded(child: _buildContent(context)),
         ],
       ),
@@ -46,15 +49,16 @@ class LanguageBreakdown extends StatelessWidget {
       return Center(child: Text('No data', style: theme.bodyMedium));
     }
 
-    // build bar + legend
     const barHeight = 8.0;
     final percents = languages!.map((l) => l.percentage).toList();
     final totalCount = percents.length;
 
     return Column(
+      // center vertically within the Expanded
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Stacked bar with precise widths & rounded ends
+        // Stacked bar
         LayoutBuilder(builder: (context, constraints) {
           final totalWidth = constraints.maxWidth;
           final widths = <double>[];
@@ -89,7 +93,7 @@ class LanguageBreakdown extends StatelessWidget {
           );
         }),
         const SizedBox(height: 8),
-        // Legend with 60%‐alpha percentages
+        // Legend with 60%-alpha percentages
         Wrap(
           spacing: 16,
           runSpacing: 8,
@@ -103,11 +107,16 @@ class LanguageBreakdown extends StatelessWidget {
             final percentText =
                 '${(lang.percentage * 100).toStringAsFixed(1)}%';
             final base = theme.bodyMedium!;
-            final alpha = (base.color!.a * 0.6 * 255).round();
+            final alpha = (base.color!.alpha * 0.6).round();
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration:
+                      BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
                 const SizedBox(width: 4),
                 Text(lang.name, style: base),
                 const SizedBox(width: 4),

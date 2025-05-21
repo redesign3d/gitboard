@@ -53,9 +53,7 @@ class _DashboardPageState extends State<DashboardPage> {
         final updated = state is MetricsLoadSuccess
             ? state.lastUpdated
             : (state as MetricsLoadFailure).lastUpdated!;
-        setState(() {
-          _lastUpdated = updated;
-        });
+        setState(() => _lastUpdated = updated);
         _startCountdown();
       }
     });
@@ -68,9 +66,8 @@ class _DashboardPageState extends State<DashboardPage> {
           ? widget.pollingInterval
           : widget.pollingInterval -
               DateTime.now().difference(_lastUpdated!);
-      setState(() {
-        _timeUntilNext = diff.isNegative ? Duration.zero : diff;
-      });
+      setState(() => _timeUntilNext =
+          diff.isNegative ? Duration.zero : diff);
     });
   }
 
@@ -83,12 +80,13 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final token = dotenv.env['GITHUB_TOKEN']!;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            // Top header
+            // Main header
             Header(
               owner: widget.owner,
               repo: widget.repo,
@@ -119,55 +117,95 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             const SizedBox(height: 10),
 
-            // Main content row: grid + sidebar
+            // Content: placeholders + metrics + sidebar
             Expanded(
               child: Row(
                 children: [
-                  // Metrics grid
+                  // Left column: placeholders pushing metrics to bottom
                   Expanded(
-                    child: BlocBuilder<MetricsBloc, MetricsState>(
-                      builder: (context, state) {
-                        final metrics = state is MetricsLoadSuccess
-                            ? state.metrics
-                            : state is MetricsLoadFailure
-                                ? state.previous
-                                : state is MetricsLoadInProgress
-                                    ? state.previous
-                                    : null;
-                        final isLoading = state is MetricsLoadInProgress;
-                        final hasError = state is MetricsLoadFailure &&
-                            state.previous == null;
-
-                        return GridView.count(
-                          crossAxisCount:
-                              (MediaQuery.of(context).size.width / 400)
-                                  .floor()
-                                  .clamp(1, 4),
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          children: [
-                            LinesMetric(
-                              linesAdded: metrics?.linesAdded,
-                              linesDeleted: metrics?.linesDeleted,
-                              isLoading: isLoading,
-                              hasError: hasError,
-                              addedColor: widget.addedLineColor,
-                              deletedColor: widget.deletedLineColor,
+                    child: Column(
+                      children: [
+                        // Placeholder 1 (spans under sub-header)
+                        const Expanded(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Color(0xFF050A1C),
                             ),
-                            LanguageBreakdown(
-                              languages: metrics?.languages,
-                              isLoading: isLoading,
-                              hasError: hasError,
+                          ),
+                        ),
+                        // Placeholder 2 (middle space)
+                        const Expanded(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Color(0xFF050A1C),
+                            ),
+                          ),
+                        ),
+                        // Metrics Row at bottom
+                        Row(
+                          children: [
+                            Expanded(
+                              child: LinesMetric(
+                                linesAdded:
+                                    context.read<MetricsBloc>().state
+                                        is MetricsLoadSuccess
+                                    ? (context.read<MetricsBloc>().state
+                                            as MetricsLoadSuccess)
+                                        .metrics
+                                        .linesAdded
+                                    : null,
+                                linesDeleted:
+                                    context.read<MetricsBloc>().state
+                                        is MetricsLoadSuccess
+                                    ? (context.read<MetricsBloc>().state
+                                            as MetricsLoadSuccess)
+                                        .metrics
+                                        .linesDeleted
+                                    : null,
+                                isLoading: context.read<MetricsBloc>().state
+                                    is MetricsLoadInProgress,
+                                hasError: context.read<MetricsBloc>().state
+                                    is MetricsLoadFailure &&
+                                    (context.read<MetricsBloc>().state
+                                            as MetricsLoadFailure)
+                                        .previous ==
+                                        null,
+                                addedColor: widget.addedLineColor,
+                                deletedColor: widget.deletedLineColor,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: LanguageBreakdown(
+                                languages:
+                                    context.read<MetricsBloc>().state
+                                            is MetricsLoadSuccess
+                                        ? (context.read<MetricsBloc>().state
+                                                as MetricsLoadSuccess)
+                                            .metrics
+                                            .languages
+                                        : null,
+                                isLoading: context
+                                        .read<MetricsBloc>()
+                                        .state
+                                        is MetricsLoadInProgress,
+                                hasError: context.read<MetricsBloc>().state
+                                        is MetricsLoadFailure &&
+                                    (context.read<MetricsBloc>().state
+                                            as MetricsLoadFailure)
+                                        .previous ==
+                                        null,
+                              ),
                             ),
                           ],
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   ),
 
                   const SizedBox(width: 10),
 
-                  // Sidebar starts under sub-header automatically
+                  // Right sidebar
                   BlocProvider(
                     create: (_) => DataStreamBloc(
                       repository: EventsRepository(

@@ -65,7 +65,7 @@ class LinesMetric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Code Lines (last 24 hrs)', style: titleStyle),
+          Text('Code Lines Added / Removed (last 24 hrs)', style: titleStyle),
           const SizedBox(height: 8),
           Expanded(child: content),
         ],
