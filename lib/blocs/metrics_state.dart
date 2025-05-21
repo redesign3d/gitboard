@@ -1,64 +1,50 @@
-// lib/blocs/metrics_state.dart
+import 'package:equatable/equatable.dart';
 
-/// A simple model to hold all fetched metrics.
-class Metrics {
-  final int commitCount;
-  final int additions;
-  final int deletions;
-  final int uniqueAuthors;
-  final int issuesOpened;
-  final int issuesClosed;
-  final int prsOpened;
-  final int prsMerged;
-  final int starCount;
-  final int forkCount;
-  final int watcherCount;
-  final Map<String, double> languageBreakdown;
-  final List<int> weeklyCommitActivity;
-  final int createEvents;
+import '../models/metrics.dart';
 
-  Metrics({
-    required this.commitCount,
-    required this.additions,
-    required this.deletions,
-    required this.uniqueAuthors,
-    required this.issuesOpened,
-    required this.issuesClosed,
-    required this.prsOpened,
-    required this.prsMerged,
-    required this.starCount,
-    required this.forkCount,
-    required this.watcherCount,
-    required this.languageBreakdown,
-    required this.weeklyCommitActivity,
-    required this.createEvents,
-  });
+abstract class MetricsState extends Equatable {
+  const MetricsState();
+
+  @override
+  List<Object?> get props => [];
 }
 
-/// States emitted by MetricsBloc
-abstract class MetricsState {}
-
-/// Initial state (nothing fetched yet)
 class MetricsInitial extends MetricsState {}
 
-/// Loading indicator
-class MetricsLoading extends MetricsState {}
+class MetricsLoadInProgress extends MetricsState {
+  final Metrics? previous;
+  final DateTime? lastUpdated;
 
-/// Successful load
-class MetricsLoaded extends MetricsState {
-  final Metrics metrics;
-  /// If you later wire in offline/stale logic, toggle this flag.
-  final bool isStale;
+  const MetricsLoadInProgress({this.previous, this.lastUpdated});
 
-  MetricsLoaded({
-    required this.metrics,
-    this.isStale = false,
-  });
+  @override
+  List<Object?> get props => [previous, lastUpdated];
 }
 
-/// Error state
-class MetricsError extends MetricsState {
-  final String message;
+class MetricsLoadSuccess extends MetricsState {
+  final Metrics metrics;
+  final DateTime lastUpdated;
 
-  MetricsError({required this.message});
+  const MetricsLoadSuccess({
+    required this.metrics,
+    required this.lastUpdated,
+  });
+
+  @override
+  List<Object?> get props => [metrics, lastUpdated];
+}
+
+class MetricsLoadFailure extends MetricsState {
+  final String error;
+  final Metrics? previous;
+  final DateTime? lastUpdated;
+
+  const MetricsLoadFailure({
+    required this.error,
+    this.previous,
+    this.lastUpdated,
+  });
+
+  @override
+  List<Object?> get props => [error, previous, lastUpdated];
 }

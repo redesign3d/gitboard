@@ -1,95 +1,141 @@
-// lib/main.dart
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 
-import 'core/services/github_graphql.dart';
-import 'core/services/github_rest.dart';
+import 'services/graphql_service.dart';
+import 'repository/metrics_repository.dart';
 import 'blocs/metrics_bloc.dart';
-import 'blocs/metrics_event.dart';
-import 'ui/pages/dashboard_page.dart';
+import 'ui/dashboard_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: '.env');
+    print('[DEBUG] .env loaded: ${dotenv.env}');
 
-  // Always reload .env on startup
-  await dotenv.load(fileName: '.env');
+    await initHiveForFlutter();
+    print('[DEBUG] initHiveForFlutter complete');
 
-  final owner = dotenv.env['GITHUB_OWNER']!;
-  final repo  = dotenv.env['GITHUB_REPO']!;
+    final repoEnv = dotenv.env['GITHUB_REPO'];
+    final token = dotenv.env['GITHUB_TOKEN'];
+    final pollingEnv = dotenv.env['POLLING_INTERVAL_SECONDS'];
+    final addedEnv = dotenv.env['LINES_ADDED_COLOR']?.trim();
+    final deletedEnv = dotenv.env['LINES_DELETED_COLOR']?.trim();
 
-  await Hive.initFlutter();
+    if (repoEnv == null || token == null) {
+      throw StateError('GITHUB_REPO or GITHUB_TOKEN not set in .env');
+    }
+    final parts = repoEnv.split('/');
+    if (parts.length != 2) {
+      throw StateError(
+          'GITHUB_REPO must be in "owner/repo" format, got: $repoEnv');
+    }
+    final owner = parts[0], repo = parts[1];
 
-  final githubGraphQL = GithubGraphQL();
-  final githubRest    = GithubRest();
+    final pollingSeconds =
+        int.tryParse(pollingEnv ?? '') ?? 30; 
+    final pollingInterval = Duration(seconds: pollingSeconds);
 
-  runApp(MyApp(
-    githubGraphQL: githubGraphQL,
-    githubRest:    githubRest,
-    owner:         owner,
-    repo:          repo,
-  ));
+    String safeHex(String? raw, String fallback) {
+      if (raw == null || raw.isEmpty) return fallback;
+      final cleaned = raw.replaceFirst('#', '');
+      if (cleaned.length != 6 && cleaned.length != 8) return fallback;
+      return '#$cleaned';
+    }
+
+    final addedHex = safeHex(addedEnv, '#01E6B3');
+    final deletedHex = safeHex(deletedEnv, '#FD7A7A');
+
+    Color hexToColor(String hex) {
+      final cleaned = hex.replaceFirst('#', '');
+      final value = int.parse(
+        cleaned.length == 6 ? 'FF$cleaned' : cleaned,
+        radix: 16,
+      );
+      return Color(value);
+    }
+
+    print('[DEBUG] Config → owner: $owner, repo: $repo, '
+        'interval: ${pollingInterval.inSeconds}s, '
+        'addedHex: $addedHex, deletedHex: $deletedHex');
+
+    final graphQLService = GraphQLService(token);
+    final repository = MetricsRepository(
+      service: graphQLService,
+      owner: owner,
+      name: repo,
+    );
+
+    runApp(MyApp(
+      owner: owner,
+      repo: repo,
+      repository: repository,
+      pollingInterval: pollingInterval,
+      addedLineColor: hexToColor(addedHex),
+      deletedLineColor: hexToColor(deletedHex),
+    ));
+  } catch (e, st) {
+    print('[ERROR] Failed to initialize app: $e\n$st');
+  }
 }
 
 class MyApp extends StatelessWidget {
-  final GithubGraphQL githubGraphQL;
-  final GithubRest    githubRest;
-  final String        owner;
-  final String        repo;
+  final String owner;
+  final String repo;
+  final MetricsRepository repository;
+  final Duration pollingInterval;
+  final Color addedLineColor;
+  final Color deletedLineColor;
 
   const MyApp({
     Key? key,
-    required this.githubGraphQL,
-    required this.githubRest,
     required this.owner,
     required this.repo,
+    required this.repository,
+    required this.pollingInterval,
+    required this.addedLineColor,
+    required this.deletedLineColor,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final baseTextTheme = GoogleFonts.ibmPlexSansTextTheme();
-    const backgroundColor = Color(0xFF050811);
-    const cardColor       = Color(0xFF070A1B);
-    const accentColor     = Color(0xFF6880A2);
+    final textColor = const Color(0xFF677FA2);
 
-    final theme = ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: backgroundColor,
-      canvasColor: backgroundColor,
-      cardColor: cardColor,
-      colorScheme: ColorScheme.dark(
-        primary: accentColor,
-        surface: backgroundColor,      // was background
-        onSurface: accentColor,        // was onBackground
+    return BlocProvider<MetricsBloc>(
+      create: (_) => MetricsBloc(
+        repository: repository,
+        pollingInterval: pollingInterval,
       ),
-      textTheme: baseTextTheme.apply(
-        bodyColor: accentColor,
-        displayColor: accentColor,
-      ),
-      iconTheme: const IconThemeData(color: accentColor),
-    );
-
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<MetricsBloc>(
-          create: (_) => MetricsBloc(
-            githubGraphQL: githubGraphQL,
-            githubRest:    githubRest,
-          )..add(FetchMetrics(
-                owner: owner,
-                repo:  repo,
-                since: DateTime.now().subtract(const Duration(hours: 24)),
-              )),
-        ),
-      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Repo Dashboard',
-        theme: theme,
-        home: DashboardPage(owner: owner, repo: repo),
+        theme: ThemeData(
+          scaffoldBackgroundColor: const Color(0xFF000000),
+          canvasColor: const Color(0xFF000000),
+          cardColor: const Color(0xFF050A1C),
+          textTheme: GoogleFonts.ibmPlexSansTextTheme(
+            ThemeData.dark().textTheme,
+          ).apply(
+            bodyColor: textColor,
+            displayColor: textColor,
+          ),
+        ),
+        home: Builder(builder: (context) {
+          return DashboardPage(
+            owner: owner,
+            repo: repo,
+            addedLineColor: addedLineColor,
+            deletedLineColor: deletedLineColor,
+            pollingInterval: pollingInterval,
+          );
+        }),
+        builder: (context, child) => Scaffold(
+          backgroundColor: const Color(0xFF000000),
+          body: child,
+        ),
       ),
     );
   }

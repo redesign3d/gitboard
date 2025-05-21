@@ -1,33 +1,21 @@
-// lib/ui/widgets/offline_banner.dart
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class OfflineBanner extends StatelessWidget {
-  final DateTime lastUpdate;
-
-  const OfflineBanner({
-    Key? key,
-    required this.lastUpdate,
-  }) : super(key: key);
+  const OfflineBanner({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final theme     = Theme.of(context);
-    final formatted = DateFormat('yyyy-MM-dd HH:mm').format(lastUpdate);
     return Container(
-      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.all(8),
-      color: theme.colorScheme.surface.withOpacity(0.8),
-      child: Row(
-        children: [
-          Icon(Icons.cloud_off, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            'Offline — last update: $formatted',
-            style: theme.textTheme.bodySmall,
+      color: const Color(0xFF050A1C),
+      child: const Center(
+        child: Text(
+          'Dashboard is currently offline. Showing stale data.',
+          style: TextStyle(
+            color: Color(0xFF677FA2),
           ),
-        ],
+        ),
       ),
     );
   }
