@@ -73,7 +73,7 @@ POLLING_INTERVAL_SECONDS|Refresh interval in seconds |30
 LINES_ADDED_COLOR|Hex color for “added” number (with #)|#01E6B3
 LINES_DELETED_COLOR|Hex color for “deleted” number| #FD7A7A
 
-## 📁 Project Structure
+## 📁 Project Structure (deprecated, will be updated soon)
 
 ```pgsql
 lib/
