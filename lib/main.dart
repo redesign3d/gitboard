@@ -1,6 +1,5 @@
 // lib/main.dart
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -16,20 +15,17 @@ import 'ui/pages/dashboard_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from the bundled .env asset
+  // Always reload .env on startup
   await dotenv.load(fileName: '.env');
 
   final owner = dotenv.env['GITHUB_OWNER']!;
   final repo  = dotenv.env['GITHUB_REPO']!;
 
-  // Init Hive (for future caching)
   await Hive.initFlutter();
 
-  // Instantiate GitHub API services
   final githubGraphQL = GithubGraphQL();
   final githubRest    = GithubRest();
 
-  // Start the app
   runApp(MyApp(
     githubGraphQL: githubGraphQL,
     githubRest:    githubRest,
@@ -54,38 +50,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Base IBM Plex Sans text theme
     final baseTextTheme = GoogleFonts.ibmPlexSansTextTheme();
-
-    // Custom color scheme
-    const background = Color(0xFF050811);
-    const surface    = Color(0xFF070A1B);
-    const accent     = Color(0xFF6880A2);
+    const backgroundColor = Color(0xFF050811);
+    const cardColor       = Color(0xFF070A1B);
+    const accentColor     = Color(0xFF6880A2);
 
     final theme = ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: background,
-      canvasColor: background,
-      cardColor: surface,
-      primaryColor: accent,
+      scaffoldBackgroundColor: backgroundColor,
+      canvasColor: backgroundColor,
+      cardColor: cardColor,
       colorScheme: ColorScheme.dark(
-        primary: accent,
-        background: background,
-        surface: surface,
-        onBackground: accent,
-        onSurface: accent,
-        onPrimary: Colors.white,
+        primary: accentColor,
+        surface: backgroundColor,      // was background
+        onSurface: accentColor,        // was onBackground
       ),
       textTheme: baseTextTheme.apply(
-        bodyColor: accent,
-        displayColor: accent,
+        bodyColor: accentColor,
+        displayColor: accentColor,
       ),
-      iconTheme: const IconThemeData(color: accent),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: background,
-        foregroundColor: accent,
-        elevation: 0,
-      ),
+      iconTheme: const IconThemeData(color: accentColor),
     );
 
     return MultiBlocProvider(
@@ -97,11 +81,7 @@ class MyApp extends StatelessWidget {
           )..add(FetchMetrics(
                 owner: owner,
                 repo:  repo,
-                since: DateTime(
-                  DateTime.now().year,
-                  DateTime.now().month,
-                  DateTime.now().day,
-                ),
+                since: DateTime.now().subtract(const Duration(hours: 24)),
               )),
         ),
       ],
@@ -109,7 +89,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Repo Dashboard',
         theme: theme,
-        home: const DashboardPage(),
+        home: DashboardPage(owner: owner, repo: repo),
       ),
     );
   }

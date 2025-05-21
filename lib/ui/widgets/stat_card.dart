@@ -18,25 +18,20 @@ class StatCard extends StatelessWidget {
     return SizedBox(
       width: 140,
       child: Card(
+        margin: EdgeInsets.zero, // no outer margin
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero, // no rounding
+        ),
         color: theme.cardColor,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                label,
-                style: theme.textTheme.bodySmall,
-              ),
+              Text(label, style: theme.textTheme.bodySmall),
               const SizedBox(height: 8),
-              Text(
-                value,
-                style: theme.textTheme.titleLarge,
-              ),
+              Text(value, style: theme.textTheme.titleLarge),
             ],
           ),
         ),
