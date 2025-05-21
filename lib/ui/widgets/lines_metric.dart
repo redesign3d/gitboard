@@ -20,18 +20,20 @@ class LinesMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context).textTheme;
+    final titleStyle = theme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+
     Widget content;
     if (isLoading && linesAdded == null) {
       content = const Center(child: CircularProgressIndicator());
     } else if (hasError && linesAdded == null) {
       content = const Center(child: Text('Failed to load'));
     } else {
-      // Single "added / deleted" line, left-aligned, with colored spans
       content = Align(
         alignment: Alignment.centerLeft,
         child: RichText(
           text: TextSpan(
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: theme.displaySmall,
             children: [
               TextSpan(
                 text: '${linesAdded ?? 0}',
@@ -55,20 +57,16 @@ class LinesMetric extends StatelessWidget {
     }
 
     return Container(
-      height: 183, // fixed height
+      height: 183,
       padding: const EdgeInsets.all(10),
       decoration: const BoxDecoration(
-        color: Color(0xFF050A1C), // widget fill
+        color: Color(0xFF050A1C),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Code Lines Added / Removed (last 24 hrs)',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          Text('Code Lines (last 24 hrs)', style: titleStyle),
           const SizedBox(height: 8),
-          // content takes remaining space
           Expanded(child: content),
         ],
       ),

@@ -1,4 +1,3 @@
-// lib/ui/widgets/sub_header.dart
 import 'package:flutter/material.dart';
 import '../../models/latest_commit.dart';
 
@@ -6,7 +5,7 @@ class SubHeader extends StatelessWidget {
   final int prOpened;
   final int prMerged;
   final LatestCommit latestCommit;
-  final int branchCount;  // renamed
+  final int branchCount;
   final int starCount;
 
   const SubHeader({
@@ -20,11 +19,10 @@ class SubHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.bodyMedium!;
-    // apply 60% opacity to the update counters:
-    final counterStyle = textStyle.copyWith(
-      color: textStyle.color?.withOpacity(0.6),
-    );
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodyMedium!;
+    final alpha = (textStyle.color!.a * 0.6 * 255).round();
+    final counterStyle = textStyle.copyWith(color: textStyle.color!.withAlpha(alpha));
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),

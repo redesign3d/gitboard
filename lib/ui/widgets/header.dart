@@ -1,4 +1,3 @@
-// lib/ui/widgets/header.dart
 import 'package:flutter/material.dart';
 
 class Header extends StatelessWidget {
@@ -19,8 +18,8 @@ class Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final base = theme.textTheme.bodyMedium!;
-    // 60% opacity for update counters
-    final counterStyle = base.copyWith(color: base.color?.withOpacity(0.6));
+    final alpha = (base.color!.a * 0.6 * 255).round();
+    final counterStyle = base.copyWith(color: base.color!.withAlpha(alpha));
 
     final lastText = lastUpdated == null
         ? 'Loading…'
@@ -32,7 +31,7 @@ class Header extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('$owner/$repo', style: theme.textTheme.headlineSmall),
+        Text('$owner/$repo', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

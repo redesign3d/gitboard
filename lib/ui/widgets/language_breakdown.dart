@@ -15,19 +15,17 @@ class LanguageBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context).textTheme;
+    final titleStyle = theme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+
     return Container(
       height: 183,
       padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(
-        color: Color(0xFF050A1C),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFF050A1C)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Language Breakdown (total)',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          Text('Language Breakdown (total)', style: titleStyle),
           const SizedBox(height: 8),
           Expanded(child: _buildContent(context)),
         ],
@@ -36,31 +34,33 @@ class LanguageBreakdown extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    final theme = Theme.of(context).textTheme;
+
     if (isLoading && languages == null) {
       return const Center(child: CircularProgressIndicator());
     }
     if (hasError && (languages == null || languages!.isEmpty)) {
-      return const Center(child: Text('Failed to load'));
+      return Center(child: Text('Failed to load', style: theme.bodyMedium));
     }
     if (languages == null || languages!.isEmpty) {
-      return const Center(child: Text('No data'));
+      return Center(child: Text('No data', style: theme.bodyMedium));
     }
 
+    // build bar + legend
     const barHeight = 8.0;
+    final percents = languages!.map((l) => l.percentage).toList();
+    final totalCount = percents.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1) ClipRRect for perfectly rounded ends + antialias
+        // Stacked bar with precise widths & rounded ends
         LayoutBuilder(builder: (context, constraints) {
           final totalWidth = constraints.maxWidth;
-          final percents = languages!.map((l) => l.percentage).toList();
-
-          // compute pixel widths, ensuring last fills remainder
           final widths = <double>[];
           double acc = 0;
-          for (var i = 0; i < percents.length; i++) {
-            if (i < percents.length - 1) {
+          for (var i = 0; i < totalCount; i++) {
+            if (i < totalCount - 1) {
               final w = totalWidth * percents[i];
               widths.add(w);
               acc += w;
@@ -68,14 +68,12 @@ class LanguageBreakdown extends StatelessWidget {
               widths.add(totalWidth - acc);
             }
           }
-
           return ClipRRect(
             clipBehavior: Clip.antiAlias,
             borderRadius: BorderRadius.circular(barHeight / 2),
             child: Row(
-              mainAxisSize: MainAxisSize.max,
               children: [
-                for (var i = 0; i < languages!.length; i++)
+                for (var i = 0; i < totalCount; i++)
                   Container(
                     width: widths[i],
                     height: barHeight,
@@ -91,7 +89,7 @@ class LanguageBreakdown extends StatelessWidget {
           );
         }),
         const SizedBox(height: 8),
-        // 2) Legend with 60% opacity on percentage
+        // Legend with 60%‐alpha percentages
         Wrap(
           spacing: 16,
           runSpacing: 8,
@@ -104,17 +102,18 @@ class LanguageBreakdown extends StatelessWidget {
             );
             final percentText =
                 '${(lang.percentage * 100).toStringAsFixed(1)}%';
-            final baseStyle = Theme.of(context).textTheme.bodyMedium!;
+            final base = theme.bodyMedium!;
+            final alpha = (base.color!.a * 0.6 * 255).round();
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
                 const SizedBox(width: 4),
-                Text(lang.name, style: baseStyle),
+                Text(lang.name, style: base),
                 const SizedBox(width: 4),
                 Text(
                   percentText,
-                  style: baseStyle.copyWith(color: baseStyle.color?.withOpacity(0.6)),
+                  style: base.copyWith(color: base.color!.withAlpha(alpha)),
                 ),
               ],
             );

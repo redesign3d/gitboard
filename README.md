@@ -31,7 +31,7 @@
 
 ## 🛠️ Prerequisites
 
-- **Flutter** ≥ 2.17 with desktop support  
+- **Flutter** built and confirmed working on 3.8.0-177.0.dev
 - A **GitHub Personal Access Token** with at least `repo` read permissions  
 - A **`.env`** file at project root (see Config below)  
 
@@ -51,7 +51,7 @@
 
     ```dotenv
     GITHUB_TOKEN=ghp_XXXXXXXXXXXXXXXXXXXXXXXX
-    GITHUB_REPO=owner/repo
+    GITHUB_REPO=owner/repo e.g. flutter/flutter
     POLLING_INTERVAL_SECONDS=30
     # Colors (hex, 6 or 8 digits)
     LINES_ADDED_COLOR=#01E6B3
