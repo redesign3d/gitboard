@@ -13,74 +13,42 @@ import 'ui/dashboard_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await dotenv.load(fileName: '.env');
-    print('[DEBUG] .env loaded: ${dotenv.env}');
+  await dotenv.load(fileName: '.env');
+  await initHiveForFlutter();
 
-    await initHiveForFlutter();
-    print('[DEBUG] initHiveForFlutter complete');
+  final repoEnv = dotenv.env['GITHUB_REPO']!;
+  final parts = repoEnv.split('/');
+  final owner = parts[0], repo = parts[1];
 
-    final repoEnv = dotenv.env['GITHUB_REPO'];
-    final token = dotenv.env['GITHUB_TOKEN'];
-    final pollingEnv = dotenv.env['POLLING_INTERVAL_SECONDS'];
-    final addedEnv = dotenv.env['LINES_ADDED_COLOR']?.trim();
-    final deletedEnv = dotenv.env['LINES_DELETED_COLOR']?.trim();
+  final token = dotenv.env['GITHUB_TOKEN']!;
+  final polling = int.tryParse(dotenv.env['POLLING_INTERVAL_SECONDS'] ?? '') ?? 30;
+  final pollingInterval = Duration(seconds: polling);
 
-    if (repoEnv == null || token == null) {
-      throw StateError('GITHUB_REPO or GITHUB_TOKEN not set in .env');
-    }
-    final parts = repoEnv.split('/');
-    if (parts.length != 2) {
-      throw StateError(
-          'GITHUB_REPO must be in "owner/repo" format, got: $repoEnv');
-    }
-    final owner = parts[0], repo = parts[1];
-
-    final pollingSeconds =
-        int.tryParse(pollingEnv ?? '') ?? 30; 
-    final pollingInterval = Duration(seconds: pollingSeconds);
-
-    String safeHex(String? raw, String fallback) {
-      if (raw == null || raw.isEmpty) return fallback;
-      final cleaned = raw.replaceFirst('#', '');
-      if (cleaned.length != 6 && cleaned.length != 8) return fallback;
-      return '#$cleaned';
-    }
-
-    final addedHex = safeHex(addedEnv, '#01E6B3');
-    final deletedHex = safeHex(deletedEnv, '#FD7A7A');
-
-    Color hexToColor(String hex) {
-      final cleaned = hex.replaceFirst('#', '');
-      final value = int.parse(
-        cleaned.length == 6 ? 'FF$cleaned' : cleaned,
-        radix: 16,
-      );
-      return Color(value);
-    }
-
-    print('[DEBUG] Config → owner: $owner, repo: $repo, '
-        'interval: ${pollingInterval.inSeconds}s, '
-        'addedHex: $addedHex, deletedHex: $deletedHex');
-
-    final graphQLService = GraphQLService(token);
-    final repository = MetricsRepository(
-      service: graphQLService,
-      owner: owner,
-      name: repo,
-    );
-
-    runApp(MyApp(
-      owner: owner,
-      repo: repo,
-      repository: repository,
-      pollingInterval: pollingInterval,
-      addedLineColor: hexToColor(addedHex),
-      deletedLineColor: hexToColor(deletedHex),
-    ));
-  } catch (e, st) {
-    print('[ERROR] Failed to initialize app: $e\n$st');
+  Color parseHex(String raw, Color fallback) {
+    final cleaned = raw.replaceFirst('#', '');
+    if (cleaned.length != 6 && cleaned.length != 8) return fallback;
+    final val = int.parse(cleaned.length == 6 ? 'FF$cleaned' : cleaned, radix: 16);
+    return Color(val);
   }
+
+  final addedColor = parseHex(dotenv.env['LINES_ADDED_COLOR'] ?? '', const Color(0xFF01E6B3));
+  final deletedColor = parseHex(dotenv.env['LINES_DELETED_COLOR'] ?? '', const Color(0xFFFD7A7A));
+
+  final graphQLService = GraphQLService(token);
+  final repository = MetricsRepository(
+    service: graphQLService,
+    owner: owner,
+    name: repo,
+  );
+
+  runApp(MyApp(
+    owner: owner,
+    repo: repo,
+    repository: repository,
+    pollingInterval: pollingInterval,
+    addedLineColor: addedColor,
+    deletedLineColor: deletedColor,
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -123,15 +91,13 @@ class MyApp extends StatelessWidget {
             displayColor: textColor,
           ),
         ),
-        home: Builder(builder: (context) {
-          return DashboardPage(
-            owner: owner,
-            repo: repo,
-            addedLineColor: addedLineColor,
-            deletedLineColor: deletedLineColor,
-            pollingInterval: pollingInterval,
-          );
-        }),
+        home: DashboardPage(
+          owner: owner,
+          repo: repo,
+          addedLineColor: addedLineColor,
+          deletedLineColor: deletedLineColor,
+          pollingInterval: pollingInterval,
+        ),
         builder: (context, child) => Scaffold(
           backgroundColor: const Color(0xFF000000),
           body: child,

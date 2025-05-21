@@ -5,10 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../blocs/metrics_bloc.dart';
 import '../blocs/metrics_state.dart';
-import '../ui/widgets/header.dart';
-import '../ui/widgets/lines_metric.dart';
-import '../ui/widgets/language_breakdown.dart';
-import '../ui/widgets/offline_banner.dart';
+import '../models/metrics.dart';
+import 'widgets/header.dart';
+import 'widgets/sub_header.dart';
+import 'widgets/lines_metric.dart';
+import 'widgets/language_breakdown.dart';
+import 'widgets/offline_banner.dart';
 
 class DashboardPage extends StatefulWidget {
   final String owner;
@@ -40,8 +42,9 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     // listen for new data
     context.read<MetricsBloc>().stream.listen((state) {
-      if (state is MetricsLoadSuccess ||
-          (state is MetricsLoadFailure && state.previous != null)) {
+      final hasData = (state is MetricsLoadSuccess) ||
+          (state is MetricsLoadFailure && state.previous != null);
+      if (hasData) {
         final updated = (state is MetricsLoadSuccess)
             ? state.lastUpdated
             : (state as MetricsLoadFailure).lastUpdated!;
@@ -87,6 +90,27 @@ class _DashboardPageState extends State<DashboardPage> {
               nextUpdateIn: _timeUntilNext,
             ),
             const SizedBox(height: 10),
+            // Sub-header bar
+            BlocBuilder<MetricsBloc, MetricsState>(
+              builder: (context, state) {
+                Metrics? m;
+                if (state is MetricsLoadSuccess) {
+                  m = state.metrics;
+                } else if (state is MetricsLoadInProgress ||
+                           state is MetricsLoadFailure) {
+                  m = (state as dynamic).previous as Metrics?;
+                }
+                if (m == null) return const SizedBox.shrink();
+                return SubHeader(
+                  prOpened: m.prOpened,
+                  prMerged: m.prMerged,
+                  latestCommit: m.latestCommit,
+                  branchCount: m.branchCount,  // updated
+                  starCount: m.starCount,
+                );
+              },                
+            ),
+            const SizedBox(height: 10),
             Expanded(
               child: BlocBuilder<MetricsBloc, MetricsState>(
                 builder: (context, state) {
@@ -97,14 +121,15 @@ class _DashboardPageState extends State<DashboardPage> {
                           : (state is MetricsLoadInProgress)
                               ? state.previous
                               : null;
-
                   final isLoading = state is MetricsLoadInProgress;
                   final hasError = state is MetricsLoadFailure &&
                       state.previous == null;
 
                   return GridView.count(
                     crossAxisCount:
-                        (MediaQuery.of(context).size.width / 400).floor().clamp(1, 4),
+                        (MediaQuery.of(context).size.width / 400)
+                            .floor()
+                            .clamp(1, 4),
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                     children: [
@@ -128,8 +153,9 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             BlocBuilder<MetricsBloc, MetricsState>(
               builder: (context, state) {
-                if (state is MetricsLoadFailure) {
-                  return OfflineBanner();
+                // only show “offline” if we have previous data but the latest load failed
+                if (state is MetricsLoadFailure && state.previous != null) {
+                  return const OfflineBanner();
                 }
                 return const SizedBox.shrink();
               },
