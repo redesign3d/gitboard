@@ -8,12 +8,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../blocs/metrics_bloc.dart';
 import '../blocs/metrics_state.dart';
-import '../models/metrics.dart';
+import '../blocs/activity_bloc.dart';
+import '../blocs/activity_state.dart';
+import '../blocs/data_stream_bloc.dart'; 
 import '../repository/events_repository.dart';
-import '../blocs/data_stream_bloc.dart';
+import '../models/metrics.dart';
 import 'widgets/header.dart';
 import 'widgets/sub_header.dart';
 import 'widgets/lines_metric.dart';
+import 'widgets/activity_graph.dart';
 import 'widgets/language_breakdown.dart';
 import 'widgets/offline_banner.dart';
 import 'widgets/data_stream_sidebar.dart';
@@ -66,8 +69,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ? widget.pollingInterval
           : widget.pollingInterval -
               DateTime.now().difference(_lastUpdated!);
-      setState(() => _timeUntilNext =
-          diff.isNegative ? Duration.zero : diff);
+      setState(
+        () => _timeUntilNext = diff.isNegative ? Duration.zero : diff,
+      );
     });
   }
 
@@ -80,13 +84,17 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final token = dotenv.env['GITHUB_TOKEN']!;
+    final cardColor = Theme.of(context).cardColor;
+    final titleStyle = Theme.of(context)
+        .textTheme
+        .titleMedium
+        ?.copyWith(fontWeight: FontWeight.bold);
 
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            // Main header
             Header(
               owner: widget.owner,
               repo: widget.repo,
@@ -94,8 +102,6 @@ class _DashboardPageState extends State<DashboardPage> {
               nextUpdateIn: _timeUntilNext,
             ),
             const SizedBox(height: 10),
-
-            // Sub-header
             BlocBuilder<MetricsBloc, MetricsState>(
               builder: (context, state) {
                 Metrics? m;
@@ -116,62 +122,101 @@ class _DashboardPageState extends State<DashboardPage> {
               },
             ),
             const SizedBox(height: 10),
-
-            // Content: placeholders + metrics + sidebar
             Expanded(
               child: Row(
                 children: [
-                  // Left column: placeholders pushing metrics to bottom
                   Expanded(
                     child: Column(
                       children: [
-                        // Placeholder 1 (spans under sub-header)
                         const Expanded(
                           child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Color(0xFF050A1C),
-                            ),
+                            decoration:
+                                BoxDecoration(color: Color(0xFF050A1C)),
                           ),
                         ),
-                        // Placeholder 2 (middle space)
                         const Expanded(
                           child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Color(0xFF050A1C),
-                            ),
+                            decoration:
+                                BoxDecoration(color: Color(0xFF050A1C)),
                           ),
                         ),
-                        // Metrics Row at bottom
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Expanded(
                               child: LinesMetric(
-                                linesAdded:
-                                    context.read<MetricsBloc>().state
-                                        is MetricsLoadSuccess
+                                linesAdded: context
+                                        .read<MetricsBloc>()
+                                        .state is MetricsLoadSuccess
                                     ? (context.read<MetricsBloc>().state
                                             as MetricsLoadSuccess)
                                         .metrics
                                         .linesAdded
                                     : null,
-                                linesDeleted:
-                                    context.read<MetricsBloc>().state
-                                        is MetricsLoadSuccess
+                                linesDeleted: context
+                                        .read<MetricsBloc>()
+                                        .state is MetricsLoadSuccess
                                     ? (context.read<MetricsBloc>().state
                                             as MetricsLoadSuccess)
                                         .metrics
                                         .linesDeleted
                                     : null,
-                                isLoading: context.read<MetricsBloc>().state
-                                    is MetricsLoadInProgress,
-                                hasError: context.read<MetricsBloc>().state
-                                    is MetricsLoadFailure &&
+                                isLoading: context
+                                        .read<MetricsBloc>()
+                                        .state is MetricsLoadInProgress,
+                                hasError: context
+                                        .read<MetricsBloc>()
+                                        .state is MetricsLoadFailure &&
                                     (context.read<MetricsBloc>().state
                                             as MetricsLoadFailure)
                                         .previous ==
                                         null,
                                 addedColor: widget.addedLineColor,
                                 deletedColor: widget.deletedLineColor,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Container(
+                                height: 183,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(color: cardColor),
+                                child: BlocBuilder<ActivityBloc,
+                                    ActivityState>(
+                                  builder: (context, activityState) {
+                                    if (activityState
+                                        is ActivityLoadInProgress) {
+                                      return const Center(
+                                          child:
+                                              CircularProgressIndicator());
+                                    }
+                                    if (activityState
+                                        is ActivityLoadFailure) {
+                                      return Center(
+                                          child: Text(
+                                              'Error: ${activityState.error}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium));
+                                    }
+                                    final weeks = (activityState
+                                            as ActivityLoadSuccess)
+                                        .weeks;
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Activity (1y)',
+                                            style: titleStyle),
+                                        const SizedBox(height: 8),
+                                        Expanded(
+                                          child:
+                                              ActivityGraph(weeks: weeks),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -189,8 +234,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                         .read<MetricsBloc>()
                                         .state
                                         is MetricsLoadInProgress,
-                                hasError: context.read<MetricsBloc>().state
-                                        is MetricsLoadFailure &&
+                                hasError: context
+                                        .read<MetricsBloc>()
+                                        .state is MetricsLoadFailure &&
                                     (context.read<MetricsBloc>().state
                                             as MetricsLoadFailure)
                                         .previous ==
@@ -202,10 +248,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
-                  // Right sidebar
                   BlocProvider(
                     create: (_) => DataStreamBloc(
                       repository: EventsRepository(
@@ -220,11 +263,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
             ),
-
-            // Offline banner
             BlocBuilder<MetricsBloc, MetricsState>(
               builder: (context, state) {
-                if (state is MetricsLoadFailure && state.previous != null) {
+                if (state is MetricsLoadFailure &&
+                    state.previous != null) {
                   return const OfflineBanner();
                 }
                 return const SizedBox.shrink();
