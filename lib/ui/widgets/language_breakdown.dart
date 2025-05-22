@@ -107,7 +107,7 @@ class LanguageBreakdown extends StatelessWidget {
             final percentText =
                 '${(lang.percentage * 100).toStringAsFixed(1)}%';
             final base = theme.bodyMedium!;
-            final alpha = (base.color!.alpha * 0.6).round();
+            final alpha = (base.color!.a * 0.6 * 255).round();
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [

@@ -9,6 +9,9 @@ class Metrics {
 
   final int prOpened;
   final int prMerged;
+  final int issueOpened;
+  final int issueClosed;
+  final int issueReopened;
   final int branchCount;
   final int starCount;
   final LatestCommit latestCommit;
@@ -19,6 +22,9 @@ class Metrics {
     required this.languages,
     required this.prOpened,
     required this.prMerged,
+    required this.issueOpened,
+    required this.issueClosed,
+    required this.issueReopened,
     required this.branchCount,
     required this.starCount,
     required this.latestCommit,
