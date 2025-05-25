@@ -4,6 +4,10 @@
 
 ---
 
+## Screenshots
+
+![Screenshot of "gitboard" project.](<images/image.png>)
+
 ## 🔍 Features (Current)
 
 - **Polling & Offline Support**  
