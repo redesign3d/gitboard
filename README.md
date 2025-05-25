@@ -6,7 +6,13 @@
 
 ## Screenshots
 
-![Screenshot of "gitboard" project.](<images/image.png>)
+### Dashboard is online:
+
+![Screenshot of "gitboard" project in online state.](<images/online.png>)
+
+### Dashboard is offline (more caching will be implemented soon):
+
+![Screenshot of "gitboard" project in offline state](<images/online.png>)
 
 ## 🔍 Features (Current)
 
