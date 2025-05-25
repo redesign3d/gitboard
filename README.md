@@ -12,7 +12,7 @@
 
 ### Dashboard is offline (more caching will be implemented soon):
 
-![Screenshot of "gitboard" project in offline state](<images/online.png>)
+![Screenshot of "gitboard" project in offline state](<images/offline.png>)
 
 ## 🔍 Features (Current)
 
