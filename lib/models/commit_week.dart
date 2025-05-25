@@ -1,5 +1,3 @@
-// lib/models/commit_week.dart
-
 import 'package:equatable/equatable.dart';
 
 class CommitWeek extends Equatable {

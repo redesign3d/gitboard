@@ -1,5 +1,3 @@
-// lib/models/language_stat.dart
-
 import 'package:equatable/equatable.dart';
 
 class LanguageStat extends Equatable {

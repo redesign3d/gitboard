@@ -1,5 +1,3 @@
-// lib/ui/dashboard_page.dart
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -20,6 +18,7 @@ import 'widgets/activity_graph.dart';
 import 'widgets/language_breakdown.dart';
 import 'widgets/offline_banner.dart';
 import 'widgets/data_stream_sidebar.dart';
+import 'widgets/main_view_widget.dart';
 
 class DashboardPage extends StatefulWidget {
   final String owner;
@@ -130,8 +129,9 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Filler to push sidebar to right
-                  const Expanded(child: SizedBox()),
+                  const Expanded(
+                    child: MainViewWidget(),
+                ),
                   const SizedBox(width: 10),
 
                   // Sidebar
@@ -158,39 +158,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
-                    flex: 2, // Lines metric
-                    child: LinesMetric(
-                      linesAdded:
-                          context.read<MetricsBloc>().state
-                                  is MetricsLoadSuccess
-                              ? (context.read<MetricsBloc>().state
-                                      as MetricsLoadSuccess)
-                                  .metrics
-                                  .linesAdded
-                              : null,
-                      linesDeleted:
-                          context.read<MetricsBloc>().state
-                                  is MetricsLoadSuccess
-                              ? (context.read<MetricsBloc>().state
-                                      as MetricsLoadSuccess)
-                                  .metrics
-                                  .linesDeleted
-                              : null,
-                      isLoading: context
-                              .read<MetricsBloc>()
-                              .state
-                              is MetricsLoadInProgress,
-                      hasError: context
-                              .read<MetricsBloc>()
-                              .state
-                              is MetricsLoadFailure &&
-                          (context.read<MetricsBloc>().state
-                                  as MetricsLoadFailure)
-                              .previous ==
-                              null,
-                      addedColor: widget.addedLineColor,
-                      deletedColor: widget.deletedLineColor,
-                    ),
+                    flex: 2, // Commit summary widget
+                    child: LinesMetric(),
                   ),
                   const SizedBox(width: 10),
                   Expanded(

@@ -1,5 +1,3 @@
-// lib/ui/widgets/language_breakdown.dart
-
 import 'package:flutter/material.dart';
 import '../../models/language_stat.dart';
 

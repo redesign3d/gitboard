@@ -1,5 +1,3 @@
-// lib/ui/widgets/activity_graph.dart
-
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../models/commit_week.dart';

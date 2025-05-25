@@ -1,4 +1,3 @@
-// lib/models/metrics.dart
 import 'language_stat.dart';
 import 'latest_commit.dart';
 
@@ -28,5 +27,6 @@ class Metrics {
     required this.branchCount,
     required this.starCount,
     required this.latestCommit,
+    
   });
 }

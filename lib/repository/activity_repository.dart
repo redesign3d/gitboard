@@ -1,5 +1,3 @@
-// lib/repository/activity_repository.dart
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/commit_week.dart';

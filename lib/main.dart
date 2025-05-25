@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -18,12 +16,12 @@ import 'ui/dashboard_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  await initHiveForFlutter();
+  await initHiveForFlutter(); // for graphql_flutter cache
 
+  // --- Env & colors ---
   final repoEnv = dotenv.env['GITHUB_REPO']!;
   final parts = repoEnv.split('/');
   final owner = parts[0], repo = parts[1];
-
   final token = dotenv.env['GITHUB_TOKEN']!;
   final polling = int.tryParse(dotenv.env['POLLING_INTERVAL_SECONDS'] ?? '') ?? 30;
   final pollingInterval = Duration(seconds: polling);
@@ -47,6 +45,19 @@ Future<void> main() async {
     const Color(0xFFFD7A7A),
   );
 
+  // --- GraphQLClient setup ---
+  // Use the same HTTP endpoint your GraphQLService uses internally
+  final httpLink = HttpLink(
+    'https://api.github.com/graphql',
+    defaultHeaders: {'Authorization': 'Bearer $token'},
+  );
+  final gqlClient = GraphQLClient(
+    link: httpLink,
+    cache: GraphQLCache(store: HiveStore()),
+  );
+  final clientNotifier = ValueNotifier<GraphQLClient>(gqlClient);
+
+  // --- Repositories & BLoCs ---
   final graphQLService = GraphQLService(token);
   final metricsRepository = MetricsRepository(
     service: graphQLService,
@@ -60,27 +71,32 @@ Future<void> main() async {
   );
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider<MetricsBloc>(
-          create: (_) => MetricsBloc(
-            repository: metricsRepository,
+    GraphQLProvider(
+      client: clientNotifier,
+      child: CacheProvider(
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider<MetricsBloc>(
+              create: (_) => MetricsBloc(
+                repository: metricsRepository,
+                pollingInterval: pollingInterval,
+              ),
+            ),
+            BlocProvider<ActivityBloc>(
+              create: (_) => ActivityBloc(
+                repository: activityRepository,
+                pollInterval: pollingInterval,
+              ),
+            ),
+          ],
+          child: MyApp(
+            owner: owner,
+            repo: repo,
+            addedLineColor: addedColor,
+            deletedLineColor: deletedColor,
             pollingInterval: pollingInterval,
           ),
         ),
-        BlocProvider<ActivityBloc>(
-          create: (_) => ActivityBloc(
-            repository: activityRepository,
-            pollInterval: pollingInterval,
-          ),
-        ),
-      ],
-      child: MyApp(
-        owner: owner,
-        repo: repo,
-        addedLineColor: addedColor,
-        deletedLineColor: deletedColor,
-        pollingInterval: pollingInterval,
       ),
     ),
   );

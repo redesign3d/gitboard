@@ -1,4 +1,3 @@
-// lib/models/latest_commit.dart
 import 'package:equatable/equatable.dart';
 
 class LatestCommit extends Equatable {

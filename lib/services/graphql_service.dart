@@ -1,4 +1,3 @@
-// lib/services/graphql_service.dart
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 class GraphQLService {
