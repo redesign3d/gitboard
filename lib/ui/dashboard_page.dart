@@ -10,7 +10,7 @@ import '../blocs/metrics_bloc.dart';
 import '../blocs/metrics_state.dart';
 import '../blocs/activity_bloc.dart';
 import '../blocs/activity_state.dart';
-import '../blocs/data_stream_bloc.dart'; 
+import '../blocs/data_stream_bloc.dart';
 import '../repository/events_repository.dart';
 import '../models/metrics.dart';
 import 'widgets/header.dart';
@@ -50,7 +50,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     context.read<MetricsBloc>().stream.listen((state) {
-      final hasData = (state is MetricsLoadSuccess) ||
+      final hasData = state is MetricsLoadSuccess ||
           (state is MetricsLoadFailure && state.previous != null);
       if (hasData) {
         final updated = state is MetricsLoadSuccess
@@ -69,9 +69,8 @@ class _DashboardPageState extends State<DashboardPage> {
           ? widget.pollingInterval
           : widget.pollingInterval -
               DateTime.now().difference(_lastUpdated!);
-      setState(
-        () => _timeUntilNext = diff.isNegative ? Duration.zero : diff,
-      );
+      setState(() =>
+          _timeUntilNext = diff.isNegative ? Duration.zero : diff);
     });
   }
 
@@ -95,6 +94,7 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
+            // Header
             Header(
               owner: widget.owner,
               repo: widget.repo,
@@ -102,6 +102,8 @@ class _DashboardPageState extends State<DashboardPage> {
               nextUpdateIn: _timeUntilNext,
             ),
             const SizedBox(height: 10),
+
+            // Sub-header
             BlocBuilder<MetricsBloc, MetricsState>(
               builder: (context, state) {
                 Metrics? m;
@@ -122,133 +124,17 @@ class _DashboardPageState extends State<DashboardPage> {
               },
             ),
             const SizedBox(height: 10),
-            Expanded(
+
+            // Data stream panel only between sub-header and bottom row
+            Flexible(
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        const Expanded(
-                          child: DecoratedBox(
-                            decoration:
-                                BoxDecoration(color: Color(0xFF050A1C)),
-                          ),
-                        ),
-                        const Expanded(
-                          child: DecoratedBox(
-                            decoration:
-                                BoxDecoration(color: Color(0xFF050A1C)),
-                          ),
-                        ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: LinesMetric(
-                                linesAdded: context
-                                        .read<MetricsBloc>()
-                                        .state is MetricsLoadSuccess
-                                    ? (context.read<MetricsBloc>().state
-                                            as MetricsLoadSuccess)
-                                        .metrics
-                                        .linesAdded
-                                    : null,
-                                linesDeleted: context
-                                        .read<MetricsBloc>()
-                                        .state is MetricsLoadSuccess
-                                    ? (context.read<MetricsBloc>().state
-                                            as MetricsLoadSuccess)
-                                        .metrics
-                                        .linesDeleted
-                                    : null,
-                                isLoading: context
-                                        .read<MetricsBloc>()
-                                        .state is MetricsLoadInProgress,
-                                hasError: context
-                                        .read<MetricsBloc>()
-                                        .state is MetricsLoadFailure &&
-                                    (context.read<MetricsBloc>().state
-                                            as MetricsLoadFailure)
-                                        .previous ==
-                                        null,
-                                addedColor: widget.addedLineColor,
-                                deletedColor: widget.deletedLineColor,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Container(
-                                height: 183,
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(color: cardColor),
-                                child: BlocBuilder<ActivityBloc,
-                                    ActivityState>(
-                                  builder: (context, activityState) {
-                                    if (activityState
-                                        is ActivityLoadInProgress) {
-                                      return const Center(
-                                          child:
-                                              CircularProgressIndicator());
-                                    }
-                                    if (activityState
-                                        is ActivityLoadFailure) {
-                                      return Center(
-                                          child: Text(
-                                              'Error: ${activityState.error}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium));
-                                    }
-                                    final weeks = (activityState
-                                            as ActivityLoadSuccess)
-                                        .weeks;
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Activity (1y)',
-                                            style: titleStyle),
-                                        const SizedBox(height: 8),
-                                        Expanded(
-                                          child:
-                                              ActivityGraph(weeks: weeks),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: LanguageBreakdown(
-                                languages:
-                                    context.read<MetricsBloc>().state
-                                            is MetricsLoadSuccess
-                                        ? (context.read<MetricsBloc>().state
-                                                as MetricsLoadSuccess)
-                                            .metrics
-                                            .languages
-                                        : null,
-                                isLoading: context
-                                        .read<MetricsBloc>()
-                                        .state
-                                        is MetricsLoadInProgress,
-                                hasError: context
-                                        .read<MetricsBloc>()
-                                        .state is MetricsLoadFailure &&
-                                    (context.read<MetricsBloc>().state
-                                            as MetricsLoadFailure)
-                                        .previous ==
-                                        null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Filler to push sidebar to right
+                  const Expanded(child: SizedBox()),
                   const SizedBox(width: 10),
+
+                  // Sidebar
                   BlocProvider(
                     create: (_) => DataStreamBloc(
                       repository: EventsRepository(
@@ -263,6 +149,123 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
             ),
+            const SizedBox(height: 10),
+
+            // Bottom row: Code Lines / Activity / Language
+            SizedBox(
+              height: 183,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    flex: 2, // Lines metric
+                    child: LinesMetric(
+                      linesAdded:
+                          context.read<MetricsBloc>().state
+                                  is MetricsLoadSuccess
+                              ? (context.read<MetricsBloc>().state
+                                      as MetricsLoadSuccess)
+                                  .metrics
+                                  .linesAdded
+                              : null,
+                      linesDeleted:
+                          context.read<MetricsBloc>().state
+                                  is MetricsLoadSuccess
+                              ? (context.read<MetricsBloc>().state
+                                      as MetricsLoadSuccess)
+                                  .metrics
+                                  .linesDeleted
+                              : null,
+                      isLoading: context
+                              .read<MetricsBloc>()
+                              .state
+                              is MetricsLoadInProgress,
+                      hasError: context
+                              .read<MetricsBloc>()
+                              .state
+                              is MetricsLoadFailure &&
+                          (context.read<MetricsBloc>().state
+                                  as MetricsLoadFailure)
+                              .previous ==
+                              null,
+                      addedColor: widget.addedLineColor,
+                      deletedColor: widget.deletedLineColor,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 4, // Activity graph
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      color: cardColor,
+                      child: BlocBuilder<ActivityBloc, ActivityState>(
+                        builder: (context, activityState) {
+                          if (activityState
+                              is ActivityLoadInProgress) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          if (activityState
+                              is ActivityLoadFailure) {
+                            return Center(
+                                child: Text(
+                                    'Error: ${activityState.error}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium));
+                          }
+                          final weeks = (activityState
+                                  as ActivityLoadSuccess)
+                              .weeks;
+                          return Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text('Activity (1y)', style: titleStyle),
+                              const SizedBox(height: 8),
+                              Expanded(
+                                child: Center(
+                                  child: ActivityGraph(weeks: weeks),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 3, // Language breakdown
+                    child: LanguageBreakdown(
+                      languages:
+                          context.read<MetricsBloc>().state
+                                  is MetricsLoadSuccess
+                              ? (context.read<MetricsBloc>().state
+                                      as MetricsLoadSuccess)
+                                  .metrics
+                                  .languages
+                              : null,
+                      isLoading: context
+                              .read<MetricsBloc>()
+                              .state
+                              is MetricsLoadInProgress,
+                      hasError: context
+                              .read<MetricsBloc>()
+                              .state
+                              is MetricsLoadFailure &&
+                          (context.read<MetricsBloc>().state
+                                  as MetricsLoadFailure)
+                              .previous ==
+                              null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Offline banner
             BlocBuilder<MetricsBloc, MetricsState>(
               builder: (context, state) {
                 if (state is MetricsLoadFailure &&

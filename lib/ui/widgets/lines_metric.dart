@@ -36,6 +36,13 @@ class LinesMetric extends StatelessWidget {
             style: theme.displaySmall,
             children: [
               TextSpan(
+                text: ' + ',
+                style: TextStyle(
+                  color: addedColor.withOpacity(0.6),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextSpan(
                 text: '${linesAdded ?? 0}',
                 style: TextStyle(
                   color: addedColor,
@@ -43,6 +50,13 @@ class LinesMetric extends StatelessWidget {
                 ),
               ),
               const TextSpan(text: ' / '),
+              TextSpan(
+                text: ' - ',
+                style: TextStyle(
+                  color: deletedColor.withOpacity(0.6),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               TextSpan(
                 text: '${linesDeleted ?? 0}',
                 style: TextStyle(
@@ -65,7 +79,7 @@ class LinesMetric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Code Lines Added / Removed (last 24 hrs)', style: titleStyle),
+          Text('Code Lines (last 24 hrs)', style: titleStyle),
           const SizedBox(height: 8),
           Expanded(child: content),
         ],
