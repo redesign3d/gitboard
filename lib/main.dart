@@ -18,22 +18,30 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
   await initHiveForFlutter(); // for graphql_flutter cache
 
-  // --- Env & colors ---
+  // --- Env & basic settings ---
   final repoEnv = dotenv.env['GITHUB_REPO']!;
   final parts = repoEnv.split('/');
   final owner = parts[0], repo = parts[1];
+
   final token = dotenv.env['GITHUB_TOKEN']!;
   final polling = int.tryParse(dotenv.env['POLLING_INTERVAL_SECONDS'] ?? '') ?? 30;
   final pollingInterval = Duration(seconds: polling);
 
+  // Enterprise "support"
+  final apiUrl = dotenv.env['GITHUB_API_URL'] ?? 'https://api.github.com';
+  final isEnterprise = (dotenv.env['IS_ENTERPRISE'] ?? 'false').toLowerCase() == 'true';
+
+  // Color parsing helper
   Color parseHex(String raw, Color fallback) {
     final cleaned = raw.replaceFirst('#', '');
-    if (cleaned.length != 6 && cleaned.length != 8) return fallback;
-    final val = int.parse(
-      cleaned.length == 6 ? 'FF$cleaned' : cleaned,
-      radix: 16,
-    );
-    return Color(val);
+    if (cleaned.length == 6 || cleaned.length == 8) {
+      final val = int.parse(
+        cleaned.length == 6 ? 'FF$cleaned' : cleaned,
+        radix: 16,
+      );
+      return Color(val);
+    }
+    return fallback;
   }
 
   final addedColor = parseHex(
@@ -46,9 +54,11 @@ Future<void> main() async {
   );
 
   // --- GraphQLClient setup ---
-  // Use the same HTTP endpoint your GraphQLService uses internally
+  final gqlEndpoint = isEnterprise
+      ? '$apiUrl/api/graphql'
+      : '$apiUrl/graphql';
   final httpLink = HttpLink(
-    'https://api.github.com/graphql',
+    gqlEndpoint,
     defaultHeaders: {'Authorization': 'Bearer $token'},
   );
   final gqlClient = GraphQLClient(
