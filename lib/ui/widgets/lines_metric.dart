@@ -1,3 +1,5 @@
+// lib/ui/widgets/lines_metric.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -53,7 +55,7 @@ class _LinesMetricState extends State<LinesMetric> {
     final bodyStyle = theme.bodyMedium;
     final baseColor = bodyStyle?.color ?? Colors.white;
     final miscColor =
-        baseColor.withAlpha((baseColor.a * 0.6 * 255).round());
+        baseColor.withAlpha((baseColor.alpha * 0.6).round());
 
     final addedColor = _parseHex(
       dotenv.env['LINES_ADDED_COLOR'] ?? '',
@@ -71,7 +73,8 @@ class _LinesMetricState extends State<LinesMetric> {
           return _buildLoading(titleStyle);
         }
         if (snap.hasError || snap.data == null) {
-          return _buildError(titleStyle);
+          final errMsg = snap.error?.toString() ?? 'Unknown error';
+          return _buildError(titleStyle, errMsg);
         }
         final s = snap.data!;
         return Container(
@@ -130,7 +133,7 @@ class _LinesMetricState extends State<LinesMetric> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Commits (4w)', style: titleStyle),
+          Text('Changes (28d)', style: titleStyle),
           const Spacer(),
           const Center(child: CircularProgressIndicator()),
         ],
@@ -138,7 +141,7 @@ class _LinesMetricState extends State<LinesMetric> {
     );
   }
 
-  Widget _buildError(TextStyle? titleStyle) {
+  Widget _buildError(TextStyle? titleStyle, String errorMsg) {
     return Container(
       height: 183,
       padding: const EdgeInsets.all(10),
@@ -146,9 +149,9 @@ class _LinesMetricState extends State<LinesMetric> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Commits (4w)', style: titleStyle),
+          Text('Changes (28d)', style: titleStyle),
           const Spacer(),
-          const Center(child: Text('Failed to load')),
+          Center(child: Text(errorMsg)),
         ],
       ),
     );

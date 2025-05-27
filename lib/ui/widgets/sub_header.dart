@@ -26,7 +26,7 @@ class SubHeader extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-      color: const Color(0xFF050A1C),
+      color: theme.cardColor,
       child: Row(
         children: [
           Expanded(

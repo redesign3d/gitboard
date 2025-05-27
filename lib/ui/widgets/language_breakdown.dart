@@ -1,3 +1,5 @@
+// lib/ui/widgets/language_breakdown.dart
+
 import 'package:flutter/material.dart';
 import '../../models/language_stat.dart';
 
@@ -15,36 +17,49 @@ class LanguageBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
-    final titleStyle = theme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+    final theme = Theme.of(context);
+    final textMedium = theme.textTheme.bodyMedium!;
+    final textSmall = theme.textTheme.bodySmall!;
+    // Compute 60% opacity on the original color
+    final alphaMedium = (textMedium.color!.alpha * 0.6).round();
+    final alphaSmall = (textSmall.color!.alpha * 0.6).round();
+    final fadedMedium = textMedium.copyWith(
+      color: textMedium.color!.withAlpha(alphaMedium),
+    );
+    final fadedSmall = textSmall.copyWith(
+      color: textSmall.color!.withAlpha(alphaSmall),
+    );
+
+    final titleStyle =
+        theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+    final cardColor = theme.cardColor;
 
     return Container(
       height: 183,
       padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(color: Color(0xFF050A1C)),
+      decoration: BoxDecoration(color: cardColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Language Breakdown (total)', style: titleStyle),
           const SizedBox(height: 8),
           // Center the bar & legend vertically
-          Expanded(child: _buildContent(context)),
+          Expanded(child: _buildContent(context, fadedMedium, fadedSmall)),
         ],
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
-
+  Widget _buildContent(
+      BuildContext context, TextStyle fadedMedium, TextStyle fadedSmall) {
     if (isLoading && languages == null) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator());
     }
     if (hasError && (languages == null || languages!.isEmpty)) {
-      return Center(child: Text('Failed to load', style: theme.bodyMedium));
+      return Center(child: Text('Failed to load', style: fadedMedium));
     }
     if (languages == null || languages!.isEmpty) {
-      return Center(child: Text('No data', style: theme.bodyMedium));
+      return Center(child: Text('No data', style: fadedMedium));
     }
 
     const barHeight = 8.0;
@@ -52,7 +67,6 @@ class LanguageBreakdown extends StatelessWidget {
     final totalCount = percents.length;
 
     return Column(
-      // center vertically within the Expanded
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -102,26 +116,19 @@ class LanguageBreakdown extends StatelessWidget {
                 radix: 16,
               ),
             );
-            final percentText =
-                '${(lang.percentage * 100).toStringAsFixed(1)}%';
-            final base = theme.bodySmall!;
-            final alpha = (base.color!.a * 0.6 * 255).round();
+            final percentText = '${(lang.percentage * 100).toStringAsFixed(1)}%';
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 8,
                   height: 8,
-                  decoration:
-                      BoxDecoration(color: color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 4),
-                Text(lang.name, style: base),
+                Text(lang.name, style: fadedMedium),
                 const SizedBox(width: 4),
-                Text(
-                  percentText,
-                  style: base.copyWith(color: base.color!.withAlpha(alpha)),
-                ),
+                Text(percentText, style: fadedSmall),
               ],
             );
           }).toList(),

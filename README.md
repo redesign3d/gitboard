@@ -8,7 +8,7 @@
 > Newest update: now supporting enterprise GitHub Instances.
 
 > [!CAUTION]
-> This repo currently stores your access token in plain and might log it for development purposes. Make sure to properly scope your token (for public repositories, an unscoped token may be used; for private repositories, check "Repository metadata: read-only" and "Contents: read only"). This system will soon be changed so the application asks for an access token on first run, then stores it in your OS secure storage.
+> This repo currently stores your access token in plain and might print it to the debug log for development purposes. Make sure to properly scope your token (for public repositories, an unscoped token may be used; for private repositories, check "Repository metadata: read-only" and "Contents: read only"). This system will soon be changed so the application asks for an access token on first run, then stores it in your OS secure storage.
 
 ## Screenshots
 
@@ -67,7 +67,7 @@
 
     ```dotenv
     IS_ENTERPRISE=false # Set to true if using GitHub Enterprise
-    GITHUB_API_URL=https://ghe.mycompany.com # Change this to your GitHub Enterprise URL if IS_ENTERPRISE is true
+    GITHUB_API_URL=https://api.github.com # Change this to your GitHub Enterprise URL if IS_ENTERPRISE is true
     GITHUB_TOKEN=ghp_XXXXXXXXXXXXXXXXXXXXXXXX
     GITHUB_REPO=owner/repo e.g. flutter/flutter
     POLLING_INTERVAL_SECONDS=30
@@ -86,7 +86,7 @@
 Env Var | Description| Example
 ---|---|---
 IS_ENTERPRISE | Wether the application should be built to track a repo on an enterprise instance of GitHub | true or false
-GITHUB_API_URL | The URL at which your enterprise instance is running (if any) | ghe.mycompany.com
+GITHUB_API_URL | The URL at which your GitHub API can be reached, https://api.github.com for regular use. | e.g. api.ghe.mycompany.com for enterprise
 GITHUB_TOKEN |Your GitHub personal access token |ghp_ABC...
 GITHUB_REPO| Repository to track (owner/repo) | flutter/flutter
 POLLING_INTERVAL_SECONDS|Refresh interval in seconds |30

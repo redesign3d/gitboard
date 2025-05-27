@@ -1,3 +1,5 @@
+// lib/ui/widgets/data_stream_sidebar.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -34,29 +36,31 @@ class DataStreamSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textSmall = theme.textTheme.bodySmall!;
+    final titleStyle =
+        theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+    final bgColor = theme.cardColor;
 
     // Configurable colors from .env
     final miscHex = dotenv.env['STREAM_MISC_COLOR'] ?? '#677FA2';
     final typeHex = dotenv.env['STREAM_TYPE_COLOR'] ?? '#6F508F';
     final userHex = dotenv.env['STREAM_USER_COLOR'] ?? '#1E6E63';
 
-    final miscColor = _parseHex(miscHex, theme.bodySmall!.color!);
+    final miscColor = _parseHex(miscHex, textSmall.color!);
     final typeColor = _parseHex(typeHex, const Color(0xFF6F508F));
     final userColor = _parseHex(userHex, const Color(0xFF1E6E63));
 
     // 60% opacity for misc elements (timestamp, ID, "from")
-    final miscAlpha = (miscColor.a * 0.6 * 255).round();
+    final miscAlpha = (miscColor.alpha * 0.6).round();
     final miscAlphaColor = miscColor.withAlpha(miscAlpha);
 
-    final titleStyle =
-        theme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
     final contentStyle =
-        GoogleFonts.ibmPlexMono(textStyle: theme.bodySmall!);
+        GoogleFonts.ibmPlexMono(textStyle: textSmall);
 
     return Container(
       width: 364,
-      color: const Color(0xFF050A1C),
+      color: bgColor,
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +109,7 @@ class DataStreamSidebar extends StatelessWidget {
                                 style: contentStyle.copyWith(color: miscAlphaColor),
                               ),
                               const SizedBox(height: 4),
-                              // ID and Event Type (ID 60% opacity, type in full #6F508F)
+                              // ID and Event Type
                               RichText(
                                 text: TextSpan(
                                   style: contentStyle,
@@ -152,13 +156,13 @@ class DataStreamSidebar extends StatelessWidget {
                   right: 0,
                   height: 200,
                   child: Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Color(0xFF050A1C),
-                          Color(0x00050A1C),
+                          bgColor,
+                          bgColor.withAlpha(0),
                         ],
                       ),
                     ),
